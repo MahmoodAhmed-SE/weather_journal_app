@@ -30,23 +30,54 @@ const port = 8080;
 const server = app.listen(port, () => console.log(`Server is up and running on port ${port}`));
 
 
-// async callback function to get the weather details of given latitude and longitude
-const getWeatherDetails = async (req, res) => {
-    const latitude = req.body.latitude;
-    const longitude = req.body.longitude;
+const getRecentWeather = (req, res) => {
+    console.log(projectData);
+    if (projectData.temp) {
+        res.send(JSON.stringify(projectData));
+    }
+}
 
-    try {
-        const api_response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${latitude}.34&lon=${longitude}.99&appid=${process.env.WEATHER_API_KEY}`);
-        const dataObj = await api_response.json();
+// Async callback function to save client details server-side
+const postNewEntry = async (req, res) => {
+    const userZip = req.body.userZip;
+    const feelings = req.body.feelings;
+    const date = req.body.date;
 
-        res.dataObj;
-    } catch (err) {
-        console.log(err);
+    // server-side simple input validation:
+    if (userZip && userZip.length > 0 && feelings && feelings.length > 0 && date && date.length > 0) {
+        try {
+            const weatherData = await getWeatherDetails(userZip);
+            const { temp } = weatherData.main;
+
+            projectData = {
+                userZip,
+                feelings,
+                temp,
+                date
+            }
+
+            res.send(JSON.stringify(projectData));
+        } catch (err) {
+            res.status(400);
+        }
+    } else {
+        res.status(400);
     }
 }
 
 
+// Async callback function to get the weather details of given zip code
+const getWeatherDetails = async (userZip) => {
+    try {
+        const api_response = await fetch(`https://api.openweathermap.org/data/2.5/weather?zip=${userZip}&appid=${process.env.WEATHER_API_KEY}&units=imperial`);
+        const dataObj = await api_response.json();
+
+        return dataObj;
+    } catch (err) {
+        throw err;
+    }
+}
 
 // Http requests
-
-app.get('/my-weather', getWeatherDetails);
+app.get('/recent-weather', getRecentWeather);
+app.post('/add-entry', postNewEntry);

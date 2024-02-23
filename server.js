@@ -29,7 +29,9 @@ app.use(express.static('website'));
 const port = 8080;
 const server = app.listen(port, () => console.log(`Server is up and running on port ${port}`));
 
-app.get('/my-weather', async (req, res) => {
+
+// async callback function to get the weather details of given latitude and longitude
+const getWeatherDetails = async (req, res) => {
     const latitude = req.body.latitude;
     const longitude = req.body.longitude;
 
@@ -41,4 +43,10 @@ app.get('/my-weather', async (req, res) => {
     } catch (err) {
         console.log(err);
     }
-});
+}
+
+
+
+// Http requests
+
+app.get('/my-weather', getWeatherDetails);

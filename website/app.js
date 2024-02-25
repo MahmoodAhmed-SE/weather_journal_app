@@ -9,22 +9,29 @@ const contentDisplayer = document.getElementById("content");
 
 const generate = document.getElementById("generate");
 
-fetch('/recent-weather').then(data => {
-    console.log(data);
-    const {temp, date, feelings} = data;
-
-    dateDisplayer.innerText = "Date: " + date;
-    tempDisplayer.innerText = "Temp: " + temp;
-    contentDisplayer.innerText = "Feelings: " + feelings;
-});
-
 
 // Create a new date instance dynamically with JS
 let d = new Date();
-let newDate = d.getMonth()+'.'+ d.getDate()+'.'+ d.getFullYear();
+let newDate = d.getMonth() + '.' + d.getDate() + '.' + d.getFullYear();
 
 
-// Listener functions
+// Listener Functions
+
+const getRecentWeatherListener = async (e) => {
+    const response = await fetch('/recent-weather');
+    try {
+        const dataObj = await response.json();
+
+        const { temp, date, feelings } = dataObj;
+
+        dateDisplayer.innerText = "Date: " + date;
+        tempDisplayer.innerText = "Temp: " + temp;
+        contentDisplayer.innerText = "Feelings: " + feelings;
+    } catch (err) {
+        console.log("Error: ", err);
+    }
+}
+
 const generateListener = async (event) => {
     event.preventDefault();
 
@@ -36,37 +43,47 @@ const generateListener = async (event) => {
             date: newDate
         }
 
-        try {     
-            const addingEntryResponse = await fetch("/add-entry", {
-                method: "POST",
-                mode: "cors",
-                cache: "no-cache",
-                credentials: "same-origin",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                redirect: "follow",
-                referrerPolicy: "no-referrer",
-                body: JSON.stringify(userData)
-            });
+        const addingEntryResponse = await fetch("/add-entry", {
+            method: "POST",
+            mode: "cors",
+            cache: "no-cache",
+            credentials: "same-origin",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            redirect: "follow",
+            referrerPolicy: "no-referrer",
+            body: JSON.stringify(userData)
+        });
 
+        try {
             const data = await addingEntryResponse.json();
-            const {temp, feelings, date} = data;
+
+            if (data.message == "city not found") {
+                throw new Error(data.message);
+            }
+
+            const { temp, feelings, date } = data;
 
             userData.temp = temp;
-            
+
             dateDisplayer.innerText = "Date: " + date;
             tempDisplayer.innerText = "Temp: " + temp;
             contentDisplayer.innerText = "Feelings: " + feelings;
         }
         catch (error) {
-            console.log(error);
+            if (error.message == "city not found") {
+                alert("No city found with given zip code. Please enter a valid zip code.");
+            }
         }
     } else {
-        alert("Please fill in both the zip code and feelings entries.");
+        alert("Please fill in both the zip code and feelings entries correctly.");
     }
 }
 
+// Listening to window for DOMContentLoaded event
+window.addEventListener("DOMContentLoaded", getRecentWeatherListener);
 
 // Listening to generate button for click event
 generate.addEventListener('click', generateListener)
+

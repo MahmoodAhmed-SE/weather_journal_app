@@ -31,53 +31,68 @@ const server = app.listen(port, () => console.log(`Server is up and running on p
 
 
 const getRecentWeather = (req, res) => {
-    console.log(projectData);
+    res.status(200);
+
     if (projectData.temp) {
         res.send(JSON.stringify(projectData));
     }
 }
 
-// Async callback function to save client details server-side
-const postNewEntry = async (req, res) => {
+// Async callback function to save client details on server
+const postEntry = async (req, res) => {
     const userZip = req.body.userZip;
     const feelings = req.body.feelings;
     const date = req.body.date;
 
     // server-side simple input validation:
-    if (userZip && userZip.length > 0 && feelings && feelings.length > 0 && date && date.length > 0) {
-        try {
-            const weatherData = await getWeatherDetails(userZip);
-            const { temp } = weatherData.main;
-
-            projectData = {
-                userZip,
-                feelings,
-                temp,
-                date
-            }
-
-            res.send(JSON.stringify(projectData));
-        } catch (err) {
-            res.status(400);
-        }
-    } else {
-        res.status(400);
+    if (!userZip || !feelings || !date) {
+        return res.status(400).json({ message: "Missing required fields" });
     }
+
+    try {
+        // Get weather details through open weather map api
+        const weatherData = await getWeatherDetails(userZip);
+
+        // save details into [projectData]
+        projectData = {
+            userZip,
+            feelings,
+            temp: weatherData.main.temp,
+            date
+        }
+
+        res.status(200).json(projectData);
+    } catch (err) {
+        console.log(err);
+        if (err.message == "city not found") {
+            res.status(404).json({ message: err.message });
+        }
+        else res.status(500).json({ message: "Internal server error" });
+    }
+
 }
 
 
 // Async callback function to get the weather details of given zip code
 const getWeatherDetails = async (userZip) => {
+    const apiResponse = await fetch(`https://api.openweathermap.org/data/2.5/weather?zip=${userZip}&appid=${process.env.WEATHER_API_KEY}&units=imperial`);
     try {
-        const api_response = await fetch(`https://api.openweathermap.org/data/2.5/weather?zip=${userZip}&appid=${process.env.WEATHER_API_KEY}&units=imperial`);
-        const dataObj = await api_response.json();
+        const dataObj = await apiResponse.json();
 
+        if (dataObj.message == "city not found") {
+            throw new Error("city not found");
+        }
+        else if (!apiResponse.ok) {
+            throw new Error(`Failed to fetch weather data: ${apiResponse.status}`);
+        }
         return dataObj;
-    } catch (err) {
-        throw err;
+    } catch (error) {
+        throw error;
     }
 }
 
+
+
 // Http requests
 app.get('/recent-weather', getRecentWeather);
-app.post('/add-entry', postNewEntry);
+app.post('/add-entry', postEntry);

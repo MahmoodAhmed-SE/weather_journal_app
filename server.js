@@ -71,11 +71,12 @@ const postEntry = async (req, res) => {
     }
 
 }
-
+// api key, however, it is supposed to be in an .env file where it is more secure.
+const WEATHER_API_KEY = "de42e12e6684894b921f6fd4c1bee467";
 
 // Async callback function to get the weather details of given zip code
 const getWeatherDetails = async (userZip) => {
-    const apiResponse = await fetch(`https://api.openweathermap.org/data/2.5/weather?zip=${userZip}&appid=${process.env.WEATHER_API_KEY}&units=imperial`);
+    const apiResponse = await fetch(`https://api.openweathermap.org/data/2.5/weather?zip=${userZip}&appid=${WEATHER_API_KEY}&units=imperial`);
     try {
         const dataObj = await apiResponse.json();
 

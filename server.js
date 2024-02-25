@@ -63,7 +63,6 @@ const postEntry = async (req, res) => {
 
         res.status(200).json(projectData);
     } catch (err) {
-        console.log(err);
         if (err.message == "city not found") {
             res.status(404).json({ message: err.message });
         }

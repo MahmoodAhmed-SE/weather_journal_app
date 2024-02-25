@@ -25,7 +25,7 @@ const getRecentWeatherListener = async (e) => {
         const { temp, date, feelings } = dataObj;
 
         dateDisplayer.innerText = "Date: " + date;
-        tempDisplayer.innerText = "Temp: " + temp;
+        tempDisplayer.innerText = "Temp: " + Math.round(temp) + 'degrees';
         contentDisplayer.innerText = "Feelings: " + feelings;
     } catch (err) {
         console.log("Error: ", err);
@@ -34,7 +34,7 @@ const getRecentWeatherListener = async (e) => {
 
 const generateListener = async (event) => {
     event.preventDefault();
-
+    
     // client-side simple input validation:
     if (zip.value && zip.value.length > 0 && feelings.value && feelings.value.length > 0) {
         let userData = {
@@ -42,7 +42,7 @@ const generateListener = async (event) => {
             feelings: feelings.value,
             date: newDate
         }
-
+        
         const addingEntryResponse = await fetch("/add-entry", {
             method: "POST",
             mode: "cors",
@@ -55,20 +55,20 @@ const generateListener = async (event) => {
             referrerPolicy: "no-referrer",
             body: JSON.stringify(userData)
         });
-
+        
         try {
             const data = await addingEntryResponse.json();
-
+            
             if (data.message == "city not found") {
                 throw new Error(data.message);
             }
-
+            
             const { temp, feelings, date } = data;
-
+            
             userData.temp = temp;
-
+            
             dateDisplayer.innerText = "Date: " + date;
-            tempDisplayer.innerText = "Temp: " + temp;
+            tempDisplayer.innerText = "Temp: " + Math.round(temp) + 'degrees';
             contentDisplayer.innerText = "Feelings: " + feelings;
         }
         catch (error) {

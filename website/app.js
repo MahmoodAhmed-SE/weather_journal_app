@@ -1,3 +1,7 @@
+// open weather map api 
+const WEATHER_API_KEY = `&appid=${'de42e12e6684894b921f6fd4c1bee467'}&units=imperial`;
+
+
 /* Global Variables */
 const zip = document.getElementById("zip");
 const feelings = document.getElementById("feelings");
@@ -14,9 +18,6 @@ const generate = document.getElementById("generate");
 let d = new Date();
 let newDate = d.getMonth() + 1 + "/" + d.getDate() + "/" + d.getFullYear()
 
-
-// fetching temperature data using open weather map api 
-const WEATHER_API_KEY = `&appid=${"de42e12e6684894b921f6fd4c1bee467"}&units=imperial`;
 
 // Async callback function to get the weather details of given zip code
 const getWeatherDetails = async (userZip) => {
@@ -42,7 +43,7 @@ const updateUI = async () => {
     try {
         const allData = await request.json();
         if (allData.message == "empty object") return;
-        
+
         dateDisplayer.innerText = "Date: " + allData.date;
         tempDisplayer.innerText = "Temp: " + Math.round(allData.temp) + ' degrees';
         contentDisplayer.innerText = "Content: " + allData.content;

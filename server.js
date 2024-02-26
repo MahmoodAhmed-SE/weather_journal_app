@@ -33,66 +33,35 @@ const server = app.listen(port, () => console.log(`Server is up and running on p
 const getRecentWeather = (req, res) => {
     res.status(200);
 
-    if (projectData.temp) {
-        res.send(JSON.stringify(projectData));
-    }
+    if (!projectData.temp || !projectData.content || !projectData.userZip || !projectData.date) {
+        res.json({message: "empty object"});
+        return;
+    } 
+
+    res.json(projectData); 
 }
 
 // Async callback function to save client details on server
 const postEntry = async (req, res) => {
-    const userZip = req.body.userZip;
-    const feelings = req.body.feelings;
-    const date = req.body.date;
+    const { userZip, content, temp, date } = req.body;
 
     // server-side simple input validation:
-    if (!userZip || !feelings || !date) {
+    if (!userZip || !content || !temp || !date) {
         return res.status(400).json({ message: "Missing required fields" });
     }
 
-    try {
-        // Get weather details through open weather map api
-        const weatherData = await getWeatherDetails(userZip);
-
-        // save details into [projectData]
-        projectData = {
-            userZip,
-            feelings,
-            temp: weatherData.main.temp,
-            date
-        }
-
-        res.status(200).json(projectData);
-    } catch (err) {
-        if (err.message == "city not found") {
-            res.status(404).json({ message: err.message });
-        }
-        else res.status(500).json({ message: "Internal server error" });
+    projectData = {
+        userZip,
+        content,
+        date,
+        temp
     }
 
-}
-// api key, however, it is supposed to be in an .env file where it is more secure.
-const WEATHER_API_KEY = "de42e12e6684894b921f6fd4c1bee467";
-
-// Async callback function to get the weather details of given zip code
-const getWeatherDetails = async (userZip) => {
-    const apiResponse = await fetch(`https://api.openweathermap.org/data/2.5/weather?zip=${userZip}&appid=${WEATHER_API_KEY}&units=imperial`);
-    try {
-        const dataObj = await apiResponse.json();
-
-        if (dataObj.message == "city not found") {
-            throw new Error("city not found");
-        }
-        else if (!apiResponse.ok) {
-            throw new Error(`Failed to fetch weather data: ${apiResponse.status}`);
-        }
-        return dataObj;
-    } catch (error) {
-        throw error;
-    }
+    res.status(200).json({ message: "Entry has been saved." });
 }
 
 
 
 // Http requests
-app.get('/recent-weather', getRecentWeather);
+app.get('/all', getRecentWeather);
 app.post('/add-entry', postEntry);
